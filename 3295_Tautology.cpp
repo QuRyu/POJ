@@ -128,11 +128,13 @@ struct Ret {
   unordered_set<string> vars;
   int i;
 
-  Ret(unique_ptr<Operator> op, unordered_set<string> vars)
+  Ret(unique_ptr<Operator> op, unordered_set<string> &&vars)
       : op(move(op)), vars(vars), i(0) {}
-  Ret(unique_ptr<Operator> op, unordered_set<string> vars, int i)
+  Ret(unique_ptr<Operator> op, unordered_set<string> &&vars, int i)
       : op(move(op)), vars(vars), i(i) {}
   Ret() {}
+
+  Ret(Ret &&ret) : op(move(ret.op)), vars(move(ret.vars)), i(ret.i) {}
 };
 
 Ret parse(const string &input, int i) {
@@ -143,7 +145,7 @@ Ret parse(const string &input, int i) {
     Ret ret2 = parse(input, ret1.i);
 
     ret1.vars.insert(ret2.vars.begin(), ret2.vars.end());
-    Ret ret(make_unique<Or>(move(ret1.op), move(ret2.op)), ret1.vars,
+    Ret ret(make_unique<Or>(move(ret1.op), move(ret2.op)), move(ret1.vars),
             ret2.i + 1);
     return ret;
   }
@@ -154,7 +156,7 @@ Ret parse(const string &input, int i) {
     Ret ret2 = parse(input, ret1.i);
 
     ret1.vars.insert(ret2.vars.begin(), ret2.vars.end());
-    Ret ret(make_unique<And>(move(ret1.op), move(ret2.op)), ret1.vars,
+    Ret ret(make_unique<And>(move(ret1.op), move(ret2.op)), move(ret1.vars),
             ret2.i + 1);
     return ret;
   }
@@ -162,7 +164,7 @@ Ret parse(const string &input, int i) {
   case 'N': {
     Ret ret1 = parse(input, i + 1);
 
-    Ret ret(make_unique<Not>(move(ret1.op)), ret1.vars, ret1.i + 1);
+    Ret ret(make_unique<Not>(move(ret1.op)), move(ret1.vars), ret1.i + 1);
     return ret;
   }
 
@@ -171,7 +173,7 @@ Ret parse(const string &input, int i) {
     Ret ret2 = parse(input, ret1.i);
 
     ret1.vars.insert(ret2.vars.begin(), ret2.vars.end());
-    Ret ret(make_unique<Implies>(move(ret1.op), move(ret2.op)), ret1.vars,
+    Ret ret(make_unique<Implies>(move(ret1.op), move(ret2.op)), move(ret1.vars),
             ret2.i + 1);
     return ret;
   }
@@ -181,7 +183,7 @@ Ret parse(const string &input, int i) {
     Ret ret2 = parse(input, ret1.i);
 
     ret1.vars.insert(ret2.vars.begin(), ret2.vars.end());
-    Ret ret(make_unique<Equals>(move(ret1.op), move(ret2.op)), ret1.vars,
+    Ret ret(make_unique<Equals>(move(ret1.op), move(ret2.op)), move(ret1.vars),
             ret2.i + 1);
     return ret;
   }
